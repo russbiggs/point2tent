@@ -26,14 +26,16 @@ def tent_defs(input_file):
         print "%d types of tents defined" %(i)
         return tent_list
 
+
 class TentPoint(object):
     ''''''
     def __init__(self, input_feat, tent_defn):
         self.feat = input_feat
         self.xval = self.get_point()[0]
         self.yval = self.get_point()[1]
-        self.theta = input_feat.GetFieldAsString('angle')
-        self.tent_id = input_feat.GetFieldAsString('id')
+		self.zval = tent_defn['z']
+        self.angle = input_feat.GetFieldAsDouble('angle')
+        self.tent_id = input_feat.GetFieldAsInteger('id')
         self.tent_defn = tent_defn['def']
 
     def get_point(self):
@@ -54,8 +56,8 @@ class TentPoint(object):
     def tent_draw(self):
         '''draws tent ring'''
         out_ring = ogr.Geometry(ogr.wkbLinearRing)
-        angle_cos = math.cos(math.radians(self.theta))
-        angle_sin = math.sin(math.radians(self.theta))
+        angle_cos = math.cos(math.radians(self.angle))
+        angle_sin = math.sin(math.radians(self.angle))
         for vertice in self.tent_defn:
             point_init = (self.xval + vertice[0], self.yval + vertice[1])
             x_rotate = (vertice[0] * angle_cos - vertice[1] * angle_sin)
@@ -64,4 +66,4 @@ class TentPoint(object):
             point = (point_init[0] + point_change[0], point_init[1] + point_change[1])
             out_ring.AddPoint(point[0], point[1])
         out_ring.CloseRings()
-        TentPoint.draw_poly(out_ring)
+        return TentPoint.draw_poly(out_ring)
