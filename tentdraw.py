@@ -25,9 +25,9 @@ def tent_defs(input_file):
         tent_list.append(unhcr_def)
         print "%d types of tents defined" %(i)
         return tent_list
-        
+
 def draw_tents(input_file, tent_defns):
-    ''''''
+    '''iterates through points and draws tent polys'''
     shp = ogr.Open(input_file)
     lyr = shp.GetLayer()
     drv = ogr.GetDriverByName('ESRI Shapefile')
@@ -58,7 +58,8 @@ def draw_tents(input_file, tent_defns):
     print "complete"
 
 class TentPoint(object):
-    ''''''
+    '''class to define points used to iterate over features in draw_tents 
+	function'''
     def __init__(self, input_feat, tent_defn):
         self.feat = input_feat
         self.xval = self.get_point()[0]
@@ -69,7 +70,7 @@ class TentPoint(object):
         self.tent_defn = tent_defn[0].get('def')
 
     def get_point(self):
-        ''''''
+        '''gets point from feature returns tuple'''
         pt = self.feat.GetGeometryRef()
         coords = pt.GetPoint()
         return coords
@@ -92,7 +93,7 @@ class TentPoint(object):
             point_init = (self.xval + vertice[0], self.yval + vertice[1])
             x_rotate = (vertice[0] * angle_cos - vertice[1] * angle_sin)
             y_rotate = (vertice[0] * angle_sin + vertice[1] * angle_cos)
-            point_change = (-1*vertice[0] - x_rotate,-1* vertice[1] - y_rotate)
+            point_change = (-1 * vertice[0] - x_rotate, -1 * vertice[1] - y_rotate)
             point = (point_init[0] + point_change[0], point_init[1] + point_change[1])
             out_ring.AddPoint(point[0], point[1])
         out_ring.CloseRings()
