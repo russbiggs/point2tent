@@ -26,31 +26,48 @@ def tent_defs(input_file):
         print "%d types of tents defined" %(i)
         return tent_list
 
-def draw_tents(input_file, tent_defns):
+def _valid_crs(input_lyr):
+    '''tests to make sure input shapefile is in metre projection'''
+    spatial_ref = input_lyr.GetSpatialRef()
+    sr_unit = spatial_ref.GetAttrValue('UNIT')
+    if sr_unit == 'Meter':
+        return spatial_ref
+    else:
+        raise ValueError('Input shapefile is not projected in metres please\
+        project')
+
+def _create_feature(input_lyr):
+    ''''''
+    id_field = ogr.FieldDefn('id', ogr.OFTInteger)
+    height_field = ogr.FieldDefn('height', ogr.OFTReal)
+    input_lyr.CreateField(id_field)
+    input_lyr.CreateField(height_field)
+    feature_defn = input_lyr.GetLayerDefn()
+    feature = ogr.Feature(feature_defn)
+    return feature
+
+def draw_tents(input_file, tent_defns, output_file = None):
     '''iterates through points and draws tent polys'''
     shp = ogr.Open(input_file)
     lyr = shp.GetLayer()
+    try:
+        spatial_ref = _valid_crs(lyr)
+    except ValueError as err:
+        print err
+    if output_file == None:
+        output_file = "drawn_tent.shp"
+    else:
+        pass
     drv = ogr.GetDriverByName('ESRI Shapefile')
-    output_file = "drawn_tent.shp"
     output_shp = drv.CreateDataSource(output_file)
-    spatial_ref = lyr.GetSpatialRef()
     out_lyr = output_shp.CreateLayer('Tents', spatial_ref, geom_type=ogr.wkbPolygon)
-    id_field = ogr.FieldDefn('id', ogr.OFTInteger)
-    height_field = ogr.FieldDefn('height', ogr.OFTReal)
-    out_lyr.CreateField(id_field)
-    out_lyr.CreateField(height_field)
-    feature_defn = out_lyr.GetLayerDefn()
-    feature = ogr.Feature(feature_defn)
+    feature = _create_feature(out_lyr)
     i = 1
     for feat in lyr:
         feat_id = feat.GetFieldAsString('id')
         tent_def = filter(lambda defn: defn['id'] == feat_id, tent_defns)
         tent = TentPoint(feat, tent_def)
         tent.add_to_feature(feature, out_lyr)
-        tent = None
-        tent_def = None
-        del tent_def
-        del tent
         print "%d feature made" % (i)
         i += 1
     output_shp = None
@@ -59,7 +76,7 @@ def draw_tents(input_file, tent_defns):
 
 class TentPoint(object):
     '''class to define points used to iterate over features in draw_tents 
-	function'''
+    function'''
     def __init__(self, input_feat, tent_defn):
         self.feat = input_feat
         self.xval = self.get_point()[0]
