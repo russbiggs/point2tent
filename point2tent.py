@@ -81,8 +81,7 @@ class TentPoint(object):
     function'''
     def __init__(self, input_feat, tent_defn):
         self.feat = input_feat
-        self.xval = self.get_point()[0]
-        self.yval = self.get_point()[1]
+        self.cent = self.get_point()
         self.zval = tent_defn[0].get('z')
         self.angle = input_feat.GetFieldAsDouble('angle')
         self.tent_id = input_feat.GetFieldAsInteger('id')
@@ -110,11 +109,11 @@ class TentPoint(object):
         angle_cos = math.cos(math.radians(self.angle))
         angle_sin = math.sin(math.radians(self.angle))
         for vertice in self.tent_defn:
-            point_init = (self.xval + vertice[0], self.yval + vertice[1])
+            point_init = (self.cent[0] + vertice[0], self.cent[1] + vertice[1])
             x_rotate = (vertice[0] * angle_cos - vertice[1] * angle_sin)
             y_rotate = (vertice[0] * angle_sin + vertice[1] * angle_cos)
-            point_change = (-1 * vertice[0] - x_rotate, -1 * vertice[1] - y_rotate)
-            point = (point_init[0] + point_change[0], point_init[1] + point_change[1])
+            point_chng = (-1 * vertice[0] - x_rotate, -1 * vertice[1] - y_rotate)
+            point = (point_init[0] + point_chng[0], point_init[1] + point_chng[1])
             out_ring.AddPoint(point[0], point[1])
         out_ring.CloseRings()
         return TentPoint.draw_poly(out_ring)
