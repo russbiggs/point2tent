@@ -77,7 +77,7 @@ def draw_tents(input_file, tent_defns, output_file = None):
     print "complete"
 
 class TentPoint(object):
-    '''class to define points used to iterate over features in draw_tents 
+    '''class to define points used to iterate over features in draw_tents
     function'''
     def __init__(self, input_feat, tent_defn):
         self.feat = input_feat
@@ -124,6 +124,6 @@ class TentPoint(object):
         polygon = self.tent_draw()
         feature.SetGeometry(polygon)
         feature.SetField('id', self.tent_id)
-        feature.SetField('type',self.tent_type)
+        feature.SetField('type', self.tent_type)
         feature.SetField('height', self.zval)
         out_lyr.CreateFeature(feature)
