@@ -1,26 +1,25 @@
 from osgeo import ogr
 import math
+import os
 import csv
 
 def tent_defs(input_file):
     '''creates tent definition list of dictionaries'''
     tent_list = []
-    unhcr_def = {'id':'99', 'z':'2.2', 'def':[(2, -2), (3.3, -0.7), (3.3, 0.7), (2, 2), (-2, 2), (-3.3, 0.7), (-3.3, -0.7), (-2, -2)]}
+    unhcr_def = {'type':'99', 'z':'2.2', 'def':[(2, -2), (3.3, -0.7), (3.3, 0.7), (2, 2), (-2, 2), (-3.3, 0.7), (-3.3, -0.7), (-2, -2)]}
     with open(input_file, 'rb') as csv_file:
         reader = list(csv.DictReader(csv_file))
-        '''if any(len(row) < 4 for row in reader):
-            print "input file must contain 4 columns 'id', 'x', 'y', and 'z'"
-        elif ['x', 'y', 'z', 'id'] not in row[0]:
-            print "file must have fields 'id', 'x', 'y', and 'z'"
-        else:'''
+        for row in reader:
+            if len(row) < 3:
+                print 'Missing one or more fields'
         i = 1
         for row in reader:
             sign_list = [(1, -1), (1, 1), (-1, 1), (-1, -1)]
             vertices = []
             for item in sign_list:
-                vertex = (item[0] * (float(row['x'])/2), item[1] * (float(row['y'])/2))
-                vertices.append(vertex)
-            tent_list.append({'id':row['id'], 'z':row['z'], 'def':vertices})
+                vtx = (item[0] * (float(row['x'])/2), item[1] * (float(row['y'])/2))
+                vertices.append(vtx)
+            tent_list.append({'type':row['type'], 'z':row['z'], 'def':vertices})
             i += 1
         tent_list.append(unhcr_def)
         print "%d types of tents defined" %(i)
@@ -37,10 +36,12 @@ def _valid_crs(input_lyr):
         project')
 
 def _create_feature(input_lyr):
-    ''''''
+    '''creates feature and adds relevant fields'''
     id_field = ogr.FieldDefn('id', ogr.OFTInteger)
+    type_field = ogr.FieldDefn('type', ogr.OFTInteger)
     height_field = ogr.FieldDefn('height', ogr.OFTReal)
     input_lyr.CreateField(id_field)
+    input_lyr.CreateField(type_field)
     input_lyr.CreateField(height_field)
     feature_defn = input_lyr.GetLayerDefn()
     feature = ogr.Feature(feature_defn)
@@ -55,7 +56,8 @@ def draw_tents(input_file, tent_defns, output_file = None):
     except ValueError as err:
         print err
     if output_file == None:
-        output_file = "drawn_tent.shp"
+        base_name = os.path.splitext(input_file)[0]
+        output_file = base_name + "_poly.shp"
     else:
         pass
     drv = ogr.GetDriverByName('ESRI Shapefile')
@@ -64,14 +66,14 @@ def draw_tents(input_file, tent_defns, output_file = None):
     feature = _create_feature(out_lyr)
     i = 1
     for feat in lyr:
-        feat_id = feat.GetFieldAsString('id')
-        tent_def = filter(lambda defn: defn['id'] == feat_id, tent_defns)
+        feat_type = feat.GetFieldAsString('type')
+        tent_def = filter(lambda defn: defn['type'] == feat_type, tent_defns)
         tent = TentPoint(feat, tent_def)
         tent.add_to_feature(feature, out_lyr)
-        print "%d feature made" % (i)
         i += 1
     output_shp = None
     del output_shp
+    print "%d feature(s) drawn" % (i)
     print "complete"
 
 class TentPoint(object):
@@ -84,6 +86,7 @@ class TentPoint(object):
         self.zval = tent_defn[0].get('z')
         self.angle = input_feat.GetFieldAsDouble('angle')
         self.tent_id = input_feat.GetFieldAsInteger('id')
+        self.tent_type = input_feat.GetFieldAsInteger('type')
         self.tent_defn = tent_defn[0].get('def')
 
     def get_point(self):
@@ -121,5 +124,6 @@ class TentPoint(object):
         polygon = self.tent_draw()
         feature.SetGeometry(polygon)
         feature.SetField('id', self.tent_id)
+        feature.SetField('type',self.tent_type)
         feature.SetField('height', self.zval)
         out_lyr.CreateFeature(feature)
