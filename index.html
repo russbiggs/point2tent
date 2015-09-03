@@ -58,12 +58,28 @@ p2t.draw_tents(tentpoints, defs)
 <pre><code>tent_defs(input_file)
 </code></pre>
 
-<p>The tent_defs() function requires a csv in the following format:
-| type | x | y | z |
-|------|---|---|---|
-| 1    | 3 | 4 | 5 |
-where x is the and z is the height of the tent.  All values should be in metres
-The standard UNHCR family tent is automatically included as an option. This function will return a list of dictionaries that can be used in the draw_tents() function.</p>
+<p>The tent_defs() function requires a csv in the following format:</p>
+
+<table>
+<thead>
+<tr>
+<th>type</th>
+<th>x</th>
+<th>y</th>
+<th>z</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>3</td>
+<td>4</td>
+<td>5</td>
+</tr>
+</tbody>
+</table>
+
+<p>where type is a number value to be linked to the shapefile, x is the x dimension, y is the y dimension and z is the height of the tent.  All values should be in <em>metres</em>. The standard UNHCR family tent is automatically included as an option and referenced as type 99. This function will return a list of dictionaries that can be used in the draw_tents() function.</p>
 
 <p>For more advanced users, complex tent/structures polygons can be constructed using a simple python dictionary formatting as follows:</p>
 
